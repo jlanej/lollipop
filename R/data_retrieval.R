@@ -105,6 +105,28 @@ extract_domains <- function(protein_info, gene_symbol) {
   
   features <- protein_info$features
   
+  # Ensure features is a data frame or can be treated as one
+  if (!is.data.frame(features)) {
+    if (length(features) == 0) {
+      return(data.frame(
+        gene = character(),
+        domain_name = character(),
+        start = numeric(),
+        end = numeric(),
+        stringsAsFactors = FALSE
+      ))
+    }
+    # If features is not a data frame, log and return empty
+    warning("Features is not a data frame, cannot extract domains")
+    return(data.frame(
+      gene = character(),
+      domain_name = character(),
+      start = numeric(),
+      end = numeric(),
+      stringsAsFactors = FALSE
+    ))
+  }
+  
   # Domain types to extract
   domain_types <- c("Domain", "Region", "Repeat", "Zinc finger", "DNA binding")
   
@@ -188,6 +210,28 @@ extract_ptms <- function(protein_info, gene_symbol) {
   }
   
   features <- protein_info$features
+  
+  # Ensure features is a data frame or can be treated as one
+  if (!is.data.frame(features)) {
+    if (length(features) == 0) {
+      return(data.frame(
+        gene = character(),
+        ptm_type = character(),
+        position = numeric(),
+        description = character(),
+        stringsAsFactors = FALSE
+      ))
+    }
+    # If features is not a data frame, log and return empty
+    warning("Features is not a data frame, cannot extract PTMs")
+    return(data.frame(
+      gene = character(),
+      ptm_type = character(),
+      position = numeric(),
+      description = character(),
+      stringsAsFactors = FALSE
+    ))
+  }
   
   # PTM types to extract
   ptm_types <- c("Modified residue", "Cross-link", "Glycosylation", 
@@ -328,12 +372,36 @@ retrieve_protein_data <- function(gene_symbol, cache_dir = NULL) {
   
   message(paste("  Protein length:", protein_info$protein_length, "amino acids"))
   
-  # Extract domains and PTMs
-  domains <- extract_domains(protein_info, gene_symbol)
-  message(paste("  Found", nrow(domains), "domains"))
+  # Extract domains and PTMs with error handling
+  domains <- tryCatch({
+    d <- extract_domains(protein_info, gene_symbol)
+    message(paste("  Found", nrow(d), "domains"))
+    d
+  }, error = function(e) {
+    warning(paste("Failed to extract domains:", e$message))
+    data.frame(
+      gene = character(),
+      domain_name = character(),
+      start = numeric(),
+      end = numeric(),
+      stringsAsFactors = FALSE
+    )
+  })
   
-  ptms <- extract_ptms(protein_info, gene_symbol)
-  message(paste("  Found", nrow(ptms), "PTMs"))
+  ptms <- tryCatch({
+    p <- extract_ptms(protein_info, gene_symbol)
+    message(paste("  Found", nrow(p), "PTMs"))
+    p
+  }, error = function(e) {
+    warning(paste("Failed to extract PTMs:", e$message))
+    data.frame(
+      gene = character(),
+      ptm_type = character(),
+      position = numeric(),
+      description = character(),
+      stringsAsFactors = FALSE
+    )
+  })
   
   result <- list(
     domains = domains,
