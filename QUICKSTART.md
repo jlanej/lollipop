@@ -41,18 +41,24 @@ Family_ID    CHROM    POS    REF    ALT    vepSYMBOL    vepMAX_AF    vepIMPACT  
 
 ### Create your plot
 
+**NEW: No need to look up protein length!** Just provide the gene name:
+
 ```bash
-Rscript detailed_lollipop_plot.R my_variants.tsv GENE_NAME PROTEIN_LENGTH output.png
+Rscript detailed_lollipop_plot.R my_variants.tsv GENE_NAME output.png
 ```
 
 Example:
 ```bash
-Rscript detailed_lollipop_plot.R variants.tsv TP53 393 tp53_plot.png
+Rscript detailed_lollipop_plot.R variants.tsv TP53 tp53_plot.png
 ```
+
+The protein length, domains, and PTMs are automatically retrieved from UniProt!
 
 ## Common Gene Lengths
 
-For reference:
+**Note: With auto-retrieval, you no longer need to look up protein lengths!** They're automatically fetched from UniProt.
+
+For reference (if needed):
 
 | Gene | Protein Length (aa) |
 |------|---------------------|
@@ -66,8 +72,6 @@ For reference:
 | PALB2 | 1186 |
 | ATM | 3056 |
 | CHEK2 | 543 |
-
-Find protein lengths at [UniProt](https://www.uniprot.org/)
 
 ## Next Steps
 
@@ -106,7 +110,7 @@ aa_position <- ceiling((genomic_pos - gene_start) / 3)
 ```
 
 **Q: Where do I get protein domain data?**  
-A: Download from:
+A: Domain and PTM data are now automatically retrieved from UniProt! No manual download needed. If you prefer to provide your own data, you can still download from:
 - UniProt: https://www.uniprot.org/
 - Pfam: http://pfam.xfam.org/
 - InterPro: https://www.ebi.ac.uk/interpro/

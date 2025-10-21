@@ -7,6 +7,7 @@ A comprehensive R package for creating detailed lollipop plots to visualize geno
 - **Variant Visualization**: Display variants with counts and positions
 - **Protein Domains**: Show protein domain architecture
 - **PTM Display**: Visualize Post-Translational Modifications
+- **Automatic Data Retrieval**: Automatically fetch protein domains and PTMs from UniProt - no manual data collection needed!
 - **Color Coding**: Variants colored by VEP consequence
 - **Interactive Labels**: Automatic labeling of high-impact variants
 - **Flexible Input**: Support for standard VCF-annotated data
@@ -16,7 +17,11 @@ A comprehensive R package for creating detailed lollipop plots to visualize geno
 The following R packages are required:
 
 ```r
+# Core plotting packages
 install.packages(c("ggplot2", "dplyr", "scales", "ggrepel"))
+
+# For automatic data retrieval (optional but recommended)
+install.packages(c("httr", "jsonlite"))
 ```
 
 ## Quick Start
@@ -42,7 +47,9 @@ This will create:
 
 ## Usage
 
-### Basic Usage
+### Basic Usage with Auto-Retrieval (NEW!)
+
+The easiest way to create plots - just provide your variant data:
 
 ```r
 source("detailed_lollipop_plot.R")
@@ -50,16 +57,19 @@ source("detailed_lollipop_plot.R")
 # Load your variant data
 variant_data <- read.delim("your_variants.tsv", sep="\t", header=TRUE)
 
-# Create a simple lollipop plot
+# Create plot - protein length, domains, and PTMs are automatically retrieved!
 plot <- create_detailed_lollipop_plot(
   variant_data = variant_data,
   gene_name = "BRCA1",
-  protein_length = 1863,
   output_file = "my_lollipop.png"
 )
 ```
 
-### Advanced Usage with Domains and PTMs
+No need to manually download domain data or look up protein lengths!
+
+### Advanced Usage with Manual Data
+
+You can still provide your own domain and PTM data if preferred:
 
 ```r
 # Load protein domain data
@@ -68,7 +78,7 @@ domains <- read.delim("protein_domains.tsv", sep="\t", header=TRUE)
 # Load PTM data
 ptms <- read.delim("ptms.tsv", sep="\t", header=TRUE)
 
-# Create detailed plot
+# Create detailed plot with manual data
 plot <- create_detailed_lollipop_plot(
   variant_data = variant_data,
   protein_domains = domains,
@@ -84,11 +94,15 @@ plot <- create_detailed_lollipop_plot(
 ### Command Line Usage
 
 ```bash
-Rscript detailed_lollipop_plot.R <variant_file> <gene_name> <protein_length> [output_file]
+Rscript detailed_lollipop_plot.R <variant_file> <gene_name> [protein_length] [output_file]
 ```
 
-Example:
+Examples:
 ```bash
+# With auto-retrieval (recommended)
+Rscript detailed_lollipop_plot.R variants.tsv BRCA1 brca1_plot.png
+
+# With manual protein length
 Rscript detailed_lollipop_plot.R variants.tsv BRCA1 1863 brca1_plot.png
 ```
 
@@ -195,14 +209,11 @@ The plot can be customized by modifying the following parameters:
 
 3. **Multiple Genes**: Create separate plots for each gene of interest.
 
-4. **Domain Data**: Domain information can be obtained from:
+4. **Domain and PTM Data**: Now automatically retrieved from UniProt! Alternatively, you can manually obtain domain and PTM information from:
    - UniProt (https://www.uniprot.org/)
    - Pfam (http://pfam.xfam.org/)
    - InterPro (https://www.ebi.ac.uk/interpro/)
-
-5. **PTM Data**: PTM information is available from:
    - PhosphoSitePlus (https://www.phosphosite.org/)
-   - UniProt PTM annotations
 
 ## Troubleshooting
 

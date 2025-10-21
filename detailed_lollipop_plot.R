@@ -13,27 +13,82 @@ library(dplyr)
 library(scales)
 library(ggrepel)
 
+# Source data retrieval functions
+script_dir <- dirname(sys.frame(1)$ofile)
+if (length(script_dir) == 0 || script_dir == ".") {
+  script_dir <- getwd()
+}
+data_retrieval_file <- file.path(script_dir, "data_retrieval.R")
+if (file.exists(data_retrieval_file)) {
+  source(data_retrieval_file)
+} else if (file.exists("data_retrieval.R")) {
+  source("data_retrieval.R")
+}
+
 #' Create a detailed lollipop plot for genomic variants
 #'
 #' @param variant_data Data frame with columns: Family_ID, CHROM, POS, REF, ALT, 
 #'                     vepSYMBOL, vepMAX_AF, vepIMPACT, vepConsequence, sample, kid_GT
-#' @param protein_domains Data frame with columns: gene, domain_name, start, end
-#' @param ptms Data frame with columns: gene, ptm_type, position, description
-#' @param gene_name Gene name to plot (should match vepSYMBOL)
-#' @param protein_length Total length of the protein in amino acids
+#' @param protein_domains Data frame with columns: gene, domain_name, start, end.
+#'                        If NULL and auto_retrieve=TRUE, will be fetched from UniProt.
+#' @param ptms Data frame with columns: gene, ptm_type, position, description.
+#'             If NULL and auto_retrieve=TRUE, will be fetched from UniProt.
+#' @param gene_name Gene name to plot (should match vepSYMBOL). Used as HUGO gene symbol for data retrieval.
+#' @param protein_length Total length of the protein in amino acids. 
+#'                       If NULL and auto_retrieve=TRUE, will be fetched from UniProt.
 #' @param output_file Optional output file path for saving the plot
 #' @param width Plot width in inches (default: 14)
 #' @param height Plot height in inches (default: 10)
+#' @param auto_retrieve If TRUE, automatically retrieve domain and PTM data from UniProt when not provided (default: TRUE)
+#' @param cache_dir Optional directory to cache retrieved data (default: ".lollipop_cache")
 #' @return ggplot object
 #' @export
 create_detailed_lollipop_plot <- function(variant_data, 
                                           protein_domains = NULL, 
                                           ptms = NULL,
                                           gene_name,
-                                          protein_length,
+                                          protein_length = NULL,
                                           output_file = NULL,
                                           width = 14,
-                                          height = 10) {
+                                          height = 10,
+                                          auto_retrieve = TRUE,
+                                          cache_dir = ".lollipop_cache") {
+  
+  # Auto-retrieve protein data if needed
+  if (auto_retrieve && (is.null(protein_domains) || is.null(ptms) || is.null(protein_length))) {
+    if (exists("retrieve_protein_data")) {
+      message(paste("Auto-retrieving protein data for", gene_name))
+      
+      tryCatch({
+        protein_data <- retrieve_protein_data(gene_name, cache_dir)
+        
+        # Use retrieved data if not provided
+        if (is.null(protein_domains) && nrow(protein_data$domains) > 0) {
+          protein_domains <- protein_data$domains
+          message(paste("  Using", nrow(protein_domains), "retrieved domains"))
+        }
+        
+        if (is.null(ptms) && nrow(protein_data$ptms) > 0) {
+          ptms <- protein_data$ptms
+          message(paste("  Using", nrow(ptms), "retrieved PTMs"))
+        }
+        
+        if (is.null(protein_length) && !is.null(protein_data$protein_length)) {
+          protein_length <- protein_data$protein_length
+          message(paste("  Using retrieved protein length:", protein_length))
+        }
+      }, error = function(e) {
+        warning(paste("Failed to auto-retrieve protein data:", e$message))
+      })
+    } else {
+      warning("Auto-retrieve requested but data_retrieval.R functions not available")
+    }
+  }
+  
+  # Validate protein_length
+  if (is.null(protein_length)) {
+    stop("protein_length must be provided or auto_retrieve must be enabled")
+  }
   
   # Filter data for the specified gene
   gene_variants <- variant_data %>%
@@ -252,16 +307,40 @@ if (!interactive()) {
   args <- commandArgs(trailingOnly = TRUE)
   
   if (length(args) == 0) {
-    cat("Usage: Rscript detailed_lollipop_plot.R <variant_file> <gene_name> <protein_length> [output_file]\n")
-    cat("\nExample:\n")
+    cat("Usage: Rscript detailed_lollipop_plot.R <variant_file> <gene_name> [protein_length] [output_file]\n")
+    cat("\nNote: protein_length is now optional. If not provided, it will be auto-retrieved from UniProt.\n")
+    cat("\nExamples:\n")
+    cat("  # With auto-retrieval:\n")
+    cat("  Rscript detailed_lollipop_plot.R variants.tsv BRCA1\n")
+    cat("  Rscript detailed_lollipop_plot.R variants.tsv BRCA1 brca1_lollipop.png\n")
+    cat("\n  # With manual protein length:\n")
     cat("  Rscript detailed_lollipop_plot.R variants.tsv BRCA1 1863 brca1_lollipop.png\n")
     quit(status = 1)
   }
   
   variant_file <- args[1]
   gene <- args[2]
-  prot_length <- as.numeric(args[3])
-  output <- if (length(args) >= 4) args[4] else paste0(gene, "_lollipop.png")
+  
+  # Parse remaining args - could be protein_length and/or output_file
+  prot_length <- NULL
+  output <- NULL
+  
+  if (length(args) >= 3) {
+    # Check if arg 3 is numeric (protein_length) or string (output_file)
+    arg3 <- args[3]
+    if (grepl("^[0-9]+$", arg3)) {
+      prot_length <- as.numeric(arg3)
+      if (length(args) >= 4) {
+        output <- args[4]
+      }
+    } else {
+      output <- arg3
+    }
+  }
+  
+  if (is.null(output)) {
+    output <- paste0(gene, "_lollipop.png")
+  }
   
   # Load data
   cat("Loading variant data from:", variant_file, "\n")
@@ -269,11 +348,16 @@ if (!interactive()) {
   
   # Create plot
   cat("Creating lollipop plot for gene:", gene, "\n")
+  if (is.null(prot_length)) {
+    cat("Protein length will be auto-retrieved from UniProt\n")
+  }
+  
   plot <- create_detailed_lollipop_plot(
     variant_data = variant_data,
     gene_name = gene,
     protein_length = prot_length,
-    output_file = output
+    output_file = output,
+    auto_retrieve = TRUE
   )
   
   # Print summary

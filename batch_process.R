@@ -4,6 +4,7 @@
 # This script processes multiple genes at once with optional filtering
 
 source("detailed_lollipop_plot.R")
+source("data_retrieval.R")
 
 library(ggplot2)
 library(dplyr)
@@ -13,13 +14,16 @@ library(ggrepel)
 #' Batch process multiple genes
 #'
 #' @param variant_file Path to variant data file
-#' @param gene_config Data frame with columns: gene_name, protein_length
-#' @param domain_file Optional path to domain data file
-#' @param ptm_file Optional path to PTM data file
+#' @param gene_config Data frame with columns: gene_name, and optionally protein_length.
+#'                    If protein_length is not provided, it will be auto-retrieved.
+#' @param domain_file Optional path to domain data file. If NULL, domains will be auto-retrieved.
+#' @param ptm_file Optional path to PTM data file. If NULL, PTMs will be auto-retrieved.
 #' @param output_dir Directory to save plots (default: current directory)
 #' @param filter_impact Optional vector of impacts to keep (e.g., c("HIGH", "MODERATE"))
 #' @param filter_af Maximum allele frequency to keep (default: 1.0, no filtering)
 #' @param filter_gt Filter to only variants present in kid (default: TRUE)
+#' @param auto_retrieve If TRUE, automatically retrieve missing protein data from UniProt (default: TRUE)
+#' @param cache_dir Optional directory to cache retrieved data (default: ".lollipop_cache")
 #' @export
 batch_process_genes <- function(variant_file,
                                 gene_config,
@@ -28,7 +32,9 @@ batch_process_genes <- function(variant_file,
                                 output_dir = ".",
                                 filter_impact = NULL,
                                 filter_af = 1.0,
-                                filter_gt = TRUE) {
+                                filter_gt = TRUE,
+                                auto_retrieve = TRUE,
+                                cache_dir = ".lollipop_cache") {
   
   cat("\n")
   cat("Batch Processing Lollipop Plots\n")
@@ -86,7 +92,12 @@ batch_process_genes <- function(variant_file,
   
   for (i in 1:nrow(gene_config)) {
     gene_name <- gene_config$gene_name[i]
-    prot_length <- gene_config$protein_length[i]
+    
+    # Get protein length - from config or auto-retrieve
+    prot_length <- NULL
+    if ("protein_length" %in% names(gene_config)) {
+      prot_length <- gene_config$protein_length[i]
+    }
     
     cat(paste(rep("-", 60), collapse = ""), "\n")
     cat("Processing gene", i, "of", nrow(gene_config), ":", gene_name, "\n")
@@ -122,7 +133,9 @@ batch_process_genes <- function(variant_file,
         protein_length = prot_length,
         output_file = output_file,
         width = 16,
-        height = 10
+        height = 10,
+        auto_retrieve = auto_retrieve,
+        cache_dir = cache_dir
       )
       
       cat("  Plot saved to:", output_file, "\n")
@@ -172,14 +185,18 @@ if (!interactive()) {
   if (length(args) < 2) {
     cat("Usage: Rscript batch_process.R <variant_file> <gene_config_file> [domain_file] [ptm_file] [output_dir]\n")
     cat("\nGene config file format (TSV):\n")
-    cat("  gene_name    protein_length\n")
+    cat("  gene_name    [protein_length]\n")
     cat("  BRCA1        1863\n")
     cat("  TP53         393\n")
+    cat("\n  Note: protein_length is optional. If not provided, it will be auto-retrieved from UniProt.\n")
     cat("\nOptional arguments:\n")
-    cat("  domain_file: Path to protein domain data\n")
-    cat("  ptm_file: Path to PTM data\n")
+    cat("  domain_file: Path to protein domain data (auto-retrieved if not provided)\n")
+    cat("  ptm_file: Path to PTM data (auto-retrieved if not provided)\n")
     cat("  output_dir: Directory to save plots (default: plots/)\n")
-    cat("\nExample:\n")
+    cat("\nExamples:\n")
+    cat("  # With auto-retrieval (only gene names needed):\n")
+    cat("  Rscript batch_process.R variants.tsv genes.tsv\n")
+    cat("\n  # With manual domain/PTM data:\n")
     cat("  Rscript batch_process.R variants.tsv genes.tsv domains.tsv ptms.tsv output_plots/\n")
     quit(status = 1)
   }
@@ -194,9 +211,11 @@ if (!interactive()) {
   gene_config <- read.delim(gene_config_file, sep = "\t", header = TRUE, stringsAsFactors = FALSE)
   
   # Validate gene config
-  if (!all(c("gene_name", "protein_length") %in% names(gene_config))) {
-    stop("Gene config file must have columns: gene_name, protein_length")
+  if (!"gene_name" %in% names(gene_config)) {
+    stop("Gene config file must have column: gene_name")
   }
+  
+  # protein_length is now optional
   
   # Run batch processing
   results <- batch_process_genes(

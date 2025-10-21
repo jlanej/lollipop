@@ -9,6 +9,10 @@ First, ensure R is installed on your system. Then install the required packages:
 install.packages(c("ggplot2", "dplyr", "scales", "ggrepel"))
 ```
 
+## What's New: Automatic Data Retrieval
+
+**New in this version**: You no longer need to manually collect protein domain and PTM data! The tool automatically fetches this information from UniProt using the gene symbol (vepSYMBOL). See [AUTO_RETRIEVAL.md](AUTO_RETRIEVAL.md) for details.
+
 ## Step-by-Step Tutorial
 
 ### Step 1: Prepare Your Data
@@ -39,18 +43,22 @@ This will produce:
 
 ### Step 3: Use Your Own Data
 
-#### Option A: Command Line (Simple)
+#### Option A: Command Line (Simple with Auto-Retrieval)
 
 ```bash
-Rscript detailed_lollipop_plot.R your_variants.tsv GENE_NAME PROTEIN_LENGTH output.png
+Rscript detailed_lollipop_plot.R your_variants.tsv GENE_NAME output.png
 ```
 
 Example:
 ```bash
+# Protein length and domains automatically retrieved
+Rscript detailed_lollipop_plot.R my_variants.tsv TP53 tp53_plot.png
+
+# Or with manual protein length if preferred
 Rscript detailed_lollipop_plot.R my_variants.tsv TP53 393 tp53_plot.png
 ```
 
-#### Option B: R Script (Advanced)
+#### Option B: R Script with Auto-Retrieval (Recommended)
 
 Create a custom R script:
 
@@ -67,17 +75,10 @@ library(ggrepel)
 # Load your data
 variants <- read.delim("my_variants.tsv", sep="\t", header=TRUE)
 
-# Optional: Load domain and PTM data
-domains <- read.delim("my_domains.tsv", sep="\t", header=TRUE)
-ptms <- read.delim("my_ptms.tsv", sep="\t", header=TRUE)
-
-# Create the plot
+# Create the plot - domains and PTMs automatically retrieved!
 plot <- create_detailed_lollipop_plot(
   variant_data = variants,
-  protein_domains = domains,  # Optional
-  ptms = ptms,                # Optional
   gene_name = "BRCA1",
-  protein_length = 1863,
   output_file = "my_plot.png",
   width = 16,
   height = 10
@@ -86,6 +87,38 @@ plot <- create_detailed_lollipop_plot(
 # Get summary statistics
 summary <- summarize_variants(variants, "BRCA1")
 print(summary)
+```
+
+#### Option C: R Script with Manual Data (Advanced)
+
+If you prefer to provide your own domain and PTM data:
+
+```r
+source("detailed_lollipop_plot.R")
+
+library(ggplot2)
+library(dplyr)
+library(scales)
+library(ggrepel)
+
+variants <- read.delim("my_variants.tsv", sep="\t", header=TRUE)
+
+# Load domain and PTM data
+domains <- read.delim("my_domains.tsv", sep="\t", header=TRUE)
+ptms <- read.delim("my_ptms.tsv", sep="\t", header=TRUE)
+
+# Create the plot with manual data
+plot <- create_detailed_lollipop_plot(
+  variant_data = variants,
+  protein_domains = domains,
+  ptms = ptms,
+  gene_name = "BRCA1",
+  protein_length = 1863,
+  output_file = "my_plot.png",
+  width = 16,
+  height = 10,
+  auto_retrieve = FALSE  # Disable auto-retrieval
+)
 ```
 
 ### Step 4: Customize the Plot
