@@ -137,8 +137,9 @@ extract_domains <- function(protein_info, gene_symbol) {
   }
   
   # Extract domain information
+  num_domains <- nrow(domains)
   domain_df <- data.frame(
-    gene = gene_symbol,
+    gene = rep(gene_symbol, num_domains),
     domain_name = sapply(domains$description, function(x) if(is.null(x)) "Domain" else x),
     start = sapply(domains$location, function(x) {
       if (!is.null(x$start) && !is.null(x$start$value)) {
@@ -200,11 +201,12 @@ extract_ptms <- function(protein_info, gene_symbol) {
   }
   
   # Extract PTM information
+  num_ptms <- nrow(ptms)
   ptm_df <- data.frame(
-    gene = gene_symbol,
-    ptm_type = character(nrow(ptms)),
-    position = numeric(nrow(ptms)),
-    description = character(nrow(ptms)),
+    gene = rep(gene_symbol, num_ptms),
+    ptm_type = character(num_ptms),
+    position = numeric(num_ptms),
+    description = character(num_ptms),
     stringsAsFactors = FALSE
   )
   
