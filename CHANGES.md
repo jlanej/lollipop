@@ -1,5 +1,16 @@
 # Changelog
 
+## Version 2.0.1 - Bug Fixes
+
+### Bug Fixes
+
+#### Fixed Data Frame Construction Error in Auto-Retrieval
+- **FIXED**: "arguments imply differing number of rows" error when retrieving protein data
+- Issue occurred when genes had multiple domains or PTMs (e.g., JMJD1C with 7 domains)
+- Root cause: `gene` column was not replicated to match the number of rows
+- Solution: Modified `extract_domains()` and `extract_ptms()` to use `rep(gene_symbol, num_rows)`
+- Affected functions: `extract_domains()`, `extract_ptms()` in `data_retrieval.R`
+
 ## Version 2.0 - Automatic Data Retrieval
 
 ### Major Features
