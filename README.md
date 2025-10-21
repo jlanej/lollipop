@@ -2,6 +2,18 @@
 
 A comprehensive R package for creating detailed lollipop plots to visualize genomic variants with protein domains, Post-Translational Modifications (PTMs), and variant annotations.
 
+## Installation
+
+Install the package directly from GitHub using `devtools`:
+
+```r
+# Install devtools if you haven't already
+install.packages("devtools")
+
+# Install lollipop package from GitHub
+devtools::install_github("jlanej/lollipop")
+```
+
 ## Features
 
 - **Variant Visualization**: Display variants with counts and positions
@@ -14,17 +26,38 @@ A comprehensive R package for creating detailed lollipop plots to visualize geno
 
 ## Requirements
 
-The following R packages are required:
+When you install the `lollipop` package using `devtools::install_github()`, all required dependencies will be automatically installed:
 
-```r
-# Core plotting packages
-install.packages(c("ggplot2", "dplyr", "scales", "ggrepel"))
+- Core plotting packages: `ggplot2`, `dplyr`, `scales`, `ggrepel`
+- For automatic data retrieval: `httr`, `jsonlite`
 
-# For automatic data retrieval (optional but recommended)
-install.packages(c("httr", "jsonlite"))
-```
+These packages will be installed automatically when you install the `lollipop` package.
 
 ## Quick Start
+
+### Using the R Package
+
+```r
+# Install the package
+devtools::install_github("jlanej/lollipop")
+
+# Load the package
+library(lollipop)
+
+# Load your variant data
+variant_data <- read.delim("your_variants.tsv", sep="\t", header=TRUE)
+
+# Create a plot with automatic data retrieval
+plot <- create_detailed_lollipop_plot(
+  variant_data = variant_data,
+  gene_name = "BRCA1",
+  output_file = "brca1_lollipop.png"
+)
+```
+
+### Using Example Scripts
+
+For trying out the examples included in the repository:
 
 ### 1. Generate Example Data
 
@@ -52,7 +85,8 @@ This will create:
 The easiest way to create plots - just provide your variant data:
 
 ```r
-source("detailed_lollipop_plot.R")
+# Load the package
+library(lollipop)
 
 # Load your variant data
 variant_data <- read.delim("your_variants.tsv", sep="\t", header=TRUE)
@@ -72,6 +106,9 @@ No need to manually download domain data or look up protein lengths!
 You can still provide your own domain and PTM data if preferred:
 
 ```r
+# Load the package
+library(lollipop)
+
 # Load protein domain data
 domains <- read.delim("protein_domains.tsv", sep="\t", header=TRUE)
 
@@ -93,7 +130,14 @@ plot <- create_detailed_lollipop_plot(
 
 ### Command Line Usage
 
+For command-line usage, you can use the standalone scripts in the repository root:
+
 ```bash
+# Clone the repository first
+git clone https://github.com/jlanej/lollipop.git
+cd lollipop
+
+# Then use the standalone scripts
 Rscript detailed_lollipop_plot.R <variant_file> <gene_name> [protein_length] [output_file]
 ```
 
@@ -178,9 +222,12 @@ The plot automatically color-codes variants based on their VEP consequence:
   - ● Glycosylation
 
 ### Summary Statistics
+
 Use the `summarize_variants()` function to get statistics:
 
 ```r
+library(lollipop)
+
 summary <- summarize_variants(variant_data, "BRCA1")
 print(summary)
 ```
@@ -217,9 +264,18 @@ The plot can be customized by modifying the following parameters:
 
 ## Troubleshooting
 
-**Missing packages**: Install required packages with:
+**Installation issues**: If you encounter issues installing the package:
 ```r
-install.packages(c("ggplot2", "dplyr", "scales", "ggrepel"))
+# Make sure devtools is installed
+install.packages("devtools")
+
+# Try installing with dependencies
+devtools::install_github("jlanej/lollipop", dependencies = TRUE)
+```
+
+**Missing packages**: If you installed without dependencies, you can install them manually:
+```r
+install.packages(c("ggplot2", "dplyr", "scales", "ggrepel", "httr", "jsonlite"))
 ```
 
 **No variants displayed**: Check that:
