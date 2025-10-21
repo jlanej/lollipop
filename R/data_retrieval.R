@@ -123,23 +123,44 @@ extract_domains <- function(protein_info, gene_symbol) {
   
   # Extract domain information
   num_domains <- nrow(domains)
+  
+  # Extract domain information with proper handling of list columns
+  domain_names <- character(num_domains)
+  domain_starts <- numeric(num_domains)
+  domain_ends <- numeric(num_domains)
+  
+  for (i in 1:num_domains) {
+    # Get description
+    desc <- domains$description[[i]]
+    domain_names[i] <- if(is.null(desc)) "Domain" else desc
+    
+    # Get location
+    loc <- domains$location[[i]]
+    if (!is.null(loc)) {
+      # Handle start position
+      if (!is.null(loc$start) && !is.null(loc$start$value)) {
+        domain_starts[i] <- loc$start$value
+      } else {
+        domain_starts[i] <- NA
+      }
+      
+      # Handle end position
+      if (!is.null(loc$end) && !is.null(loc$end$value)) {
+        domain_ends[i] <- loc$end$value
+      } else {
+        domain_ends[i] <- NA
+      }
+    } else {
+      domain_starts[i] <- NA
+      domain_ends[i] <- NA
+    }
+  }
+  
   domain_df <- data.frame(
     gene = rep(gene_symbol, num_domains),
-    domain_name = sapply(domains$description, function(x) if(is.null(x)) "Domain" else x),
-    start = sapply(domains$location, function(x) {
-      if (!is.null(x$start) && !is.null(x$start$value)) {
-        return(x$start$value)
-      } else {
-        return(NA)
-      }
-    }),
-    end = sapply(domains$location, function(x) {
-      if (!is.null(x$end) && !is.null(x$end$value)) {
-        return(x$end$value)
-      } else {
-        return(NA)
-      }
-    }),
+    domain_name = domain_names,
+    start = domain_starts,
+    end = domain_ends,
     stringsAsFactors = FALSE
   )
   
@@ -187,25 +208,25 @@ extract_ptms <- function(protein_info, gene_symbol) {
   
   # Extract PTM information
   num_ptms <- nrow(ptms)
-  ptm_df <- data.frame(
-    gene = rep(gene_symbol, num_ptms),
-    ptm_type = character(num_ptms),
-    position = numeric(num_ptms),
-    description = character(num_ptms),
-    stringsAsFactors = FALSE
-  )
   
-  for (i in 1:nrow(ptms)) {
-    ptm <- ptms[i, ]
-    
+  # Extract PTM information with proper handling of list columns
+  ptm_types <- character(num_ptms)
+  ptm_positions <- numeric(num_ptms)
+  ptm_descriptions <- character(num_ptms)
+  
+  for (i in 1:num_ptms) {
     # Get position - use start position for PTMs
+    loc <- ptms$location[[i]]
     position <- NA
-    if (!is.null(ptm$location) && !is.null(ptm$location$start) && !is.null(ptm$location$start$value)) {
-      position <- ptm$location$start$value
+    if (!is.null(loc)) {
+      if (!is.null(loc$start) && !is.null(loc$start$value)) {
+        position <- loc$start$value
+      }
     }
     
     # Get PTM type and description
-    description <- if (!is.null(ptm$description)) ptm$description else ""
+    desc <- ptms$description[[i]]
+    description <- if (!is.null(desc)) desc else ""
     
     # Categorize PTM type
     ptm_category <- "Other"
@@ -221,10 +242,18 @@ extract_ptms <- function(protein_info, gene_symbol) {
       ptm_category <- "Glycosylation"
     }
     
-    ptm_df$ptm_type[i] <- ptm_category
-    ptm_df$position[i] <- position
-    ptm_df$description[i] <- description
+    ptm_types[i] <- ptm_category
+    ptm_positions[i] <- position
+    ptm_descriptions[i] <- description
   }
+  
+  ptm_df <- data.frame(
+    gene = rep(gene_symbol, num_ptms),
+    ptm_type = ptm_types,
+    position = ptm_positions,
+    description = ptm_descriptions,
+    stringsAsFactors = FALSE
+  )
   
   # Remove rows with missing positions
   ptm_df <- ptm_df[!is.na(ptm_df$position), ]
