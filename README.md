@@ -234,7 +234,20 @@ print(summary)
 
 ## Examples
 
-See the `run_example.R` script for a complete working example with all features demonstrated.
+The repository includes several example scripts that demonstrate the functionality. These scripts are available in the root directory of the repository (not installed with the package):
+
+- `run_example.R` - Complete working example with all features
+- `auto_retrieval_example.R` - Demonstrates automatic data retrieval
+- `advanced_example.R` - Advanced usage examples
+- `batch_process.R` - Batch processing multiple genes
+
+To use these examples, clone the repository:
+
+```bash
+git clone https://github.com/jlanej/lollipop.git
+cd lollipop
+Rscript run_example.R
+```
 
 ## Customization
 
