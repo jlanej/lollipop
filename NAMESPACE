@@ -10,7 +10,7 @@ export(extract_ptms)
 export(get_protein_length)
 export(retrieve_protein_data)
 
-importFrom(ggplot2, ggplot, aes, geom_point, geom_segment, geom_text_repel, 
+importFrom(ggplot2, ggplot, aes, geom_point, geom_segment, 
            annotate, theme_minimal, theme, element_blank, element_text, 
            labs, xlim, scale_color_manual, scale_size_continuous, 
            scale_shape_manual, geom_hline, ggsave)
