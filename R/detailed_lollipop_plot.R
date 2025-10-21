@@ -265,4 +265,18 @@ summarize_variants <- function(variant_data, gene_name) {
 #' @param file_path Path to the variant data file (CSV or TSV)
 #' @param sep Separator character (default: "\t")
 #' @return Data frame with variant data
+#' @export
+load_variant_data <- function(file_path, sep = "\t") {
+  data <- read.delim(file_path, sep = sep, header = TRUE, stringsAsFactors = FALSE)
+  
+  # Validate required columns
+  required_cols <- c("Family_ID", "CHROM", "POS", "REF", "ALT", "vepSYMBOL", 
+                    "vepMAX_AF", "vepIMPACT", "vepConsequence", "sample", "kid_GT")
+  
+  missing_cols <- setdiff(required_cols, names(data))
+  if (length(missing_cols) > 0) {
+    warning(paste("Missing columns:", paste(missing_cols, collapse = ", ")))
+  }
+  
+  return(data)
 }
