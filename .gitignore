@@ -25,3 +25,8 @@ example_ptms.tsv
 output/
 plots/
 results/
+
+# Cache directories
+.lollipop_cache/
+.test_cache/
+*_cache/
