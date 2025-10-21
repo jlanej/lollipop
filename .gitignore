@@ -1,0 +1,27 @@
+# R files
+.Rhistory
+.RData
+.Rproj.user
+*.Rproj
+
+# Generated plots
+*.png
+*.pdf
+*.jpg
+*.jpeg
+
+# Generated data files (examples)
+example_variants.tsv
+example_domains.tsv
+example_ptms.tsv
+
+# Temporary files
+*~
+.DS_Store
+*.swp
+*.swo
+
+# Output directories
+output/
+plots/
+results/
