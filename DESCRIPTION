@@ -1,0 +1,25 @@
+Package: lollipop
+Type: Package
+Title: Detailed Lollipop Plots for Genomic Variants
+Version: 0.1.0
+Authors@R: person("Jane", "Lane", email = "jlanej@example.com", role = c("aut", "cre"))
+Description: A comprehensive R package for creating detailed lollipop plots to 
+    visualize genomic variants with protein domains, Post-Translational 
+    Modifications (PTMs), and variant annotations. Features include automatic 
+    data retrieval from UniProt, variant visualization with VEP consequence 
+    coloring, protein domain architecture display, and PTM visualization.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Depends:
+    R (>= 3.5.0)
+Imports:
+    ggplot2,
+    dplyr,
+    scales,
+    ggrepel,
+    httr,
+    jsonlite
+RoxygenNote: 7.0.0
+URL: https://github.com/jlanej/lollipop
+BugReports: https://github.com/jlanej/lollipop/issues
