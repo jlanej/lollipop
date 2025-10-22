@@ -204,7 +204,7 @@ create_detailed_lollipop_plot <- function(variant_data,
   # Add protein backbone line
   p <- p +
     geom_segment(aes(x = 0, xend = protein_length, y = 0, yend = 0),
-                 size = 2, color = "gray40")
+                 linewidth = 2, color = "gray40")
   
   # Add variant lollipops
   if (nrow(variant_counts) > 0) {
@@ -218,7 +218,7 @@ create_detailed_lollipop_plot <- function(variant_data,
     p <- p +
       geom_segment(data = variant_counts,
                    aes(x = aa_pos, xend = aa_pos, y = 0, yend = count),
-                   color = "gray60", size = 0.5)
+                   color = "gray60", linewidth = 0.5)
     
     # Add lollipop heads
     p <- p +
@@ -251,7 +251,7 @@ create_detailed_lollipop_plot <- function(variant_data,
   }
   
   # Add horizontal line at y=0
-  p <- p + geom_hline(yintercept = 0, linetype = "solid", color = "gray40", size = 0.5)
+  p <- p + geom_hline(yintercept = 0, linetype = "solid", color = "gray40", linewidth = 0.5)
   
   # Save plot if output file specified
   if (!is.null(output_file)) {
