@@ -59,27 +59,46 @@ create_detailed_lollipop_plot <- function(variant_data,
     if (exists("retrieve_protein_data")) {
       message(paste("Auto-retrieving protein data for", gene_name))
       
+      # Initialize protein_data with default empty structure
+      protein_data <- list(
+        domains = data.frame(
+          gene = character(),
+          domain_name = character(),
+          start = numeric(),
+          end = numeric(),
+          stringsAsFactors = FALSE
+        ),
+        ptms = data.frame(
+          gene = character(),
+          ptm_type = character(),
+          position = numeric(),
+          description = character(),
+          stringsAsFactors = FALSE
+        ),
+        protein_length = NULL
+      )
+      
       tryCatch({
         protein_data <- retrieve_protein_data(gene_name, cache_dir)
-        
-        # Use retrieved data if not provided
-        if (is.null(protein_domains) && nrow(protein_data$domains) > 0) {
-          protein_domains <- protein_data$domains
-          message(paste("  Using", nrow(protein_domains), "retrieved domains"))
-        }
-        
-        if (is.null(ptms) && nrow(protein_data$ptms) > 0) {
-          ptms <- protein_data$ptms
-          message(paste("  Using", nrow(ptms), "retrieved PTMs"))
-        }
-        
-        if (is.null(protein_length) && !is.null(protein_data$protein_length)) {
-          protein_length <- protein_data$protein_length
-          message(paste("  Using retrieved protein length:", protein_length))
-        }
       }, error = function(e) {
         warning(paste("Failed to auto-retrieve protein data:", e$message))
       })
+      
+      # Use retrieved data if not provided
+      if (is.null(protein_domains) && !is.null(protein_data$domains) && nrow(protein_data$domains) > 0) {
+        protein_domains <- protein_data$domains
+        message(paste("  Using", nrow(protein_domains), "retrieved domains"))
+      }
+      
+      if (is.null(ptms) && !is.null(protein_data$ptms) && nrow(protein_data$ptms) > 0) {
+        ptms <- protein_data$ptms
+        message(paste("  Using", nrow(ptms), "retrieved PTMs"))
+      }
+      
+      if (is.null(protein_length) && !is.null(protein_data$protein_length)) {
+        protein_length <- protein_data$protein_length
+        message(paste("  Using retrieved protein length:", protein_length))
+      }
     } else {
       warning("Auto-retrieve requested but data_retrieval.R functions not available")
     }
@@ -87,7 +106,12 @@ create_detailed_lollipop_plot <- function(variant_data,
   
   # Validate protein_length
   if (is.null(protein_length)) {
-    stop("protein_length must be provided or auto_retrieve must be enabled")
+    if (auto_retrieve) {
+      stop(paste("Could not retrieve protein length for", gene_name, 
+                 ". Please provide protein_length manually or check network connectivity and gene name."))
+    } else {
+      stop("protein_length must be provided when auto_retrieve is disabled")
+    }
   }
   
   # Filter data for the specified gene
@@ -200,7 +224,7 @@ create_detailed_lollipop_plot <- function(variant_data,
   # Add protein backbone line
   p <- p +
     geom_segment(aes(x = 0, xend = protein_length, y = 0, yend = 0),
-                 size = 2, color = "gray40")
+                 linewidth = 2, color = "gray40")
   
   # Add variant lollipops
   if (nrow(variant_counts) > 0) {
@@ -214,7 +238,7 @@ create_detailed_lollipop_plot <- function(variant_data,
     p <- p +
       geom_segment(data = variant_counts,
                    aes(x = aa_pos, xend = aa_pos, y = 0, yend = count),
-                   color = "gray60", size = 0.5)
+                   color = "gray60", linewidth = 0.5)
     
     # Add lollipop heads
     p <- p +
@@ -247,7 +271,7 @@ create_detailed_lollipop_plot <- function(variant_data,
   }
   
   # Add horizontal line at y=0
-  p <- p + geom_hline(yintercept = 0, linetype = "solid", color = "gray40", size = 0.5)
+  p <- p + geom_hline(yintercept = 0, linetype = "solid", color = "gray40", linewidth = 0.5)
   
   # Save plot if output file specified
   if (!is.null(output_file)) {
