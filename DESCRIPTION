@@ -1,7 +1,7 @@
 Package: lollipop
 Type: Package
 Title: Detailed Lollipop Plots for Genomic Variants
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: person("Jane", "Lane", email = "jlanej@example.com", role = c("aut", "cre"))
 Description: A comprehensive R package for creating detailed lollipop plots to 
     visualize genomic variants with protein domains, Post-Translational 
